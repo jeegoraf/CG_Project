@@ -1,5 +1,5 @@
 import { gl } from "./script.js";
-export function parseOBJ(text) {
+export function parseOBJ(text, shrink) {
     // because indices are base 1 let's just fill in the 0th data
     const objPositions = [[0, 0, 0]];
     const objTexcoords = [[0, 0]];
@@ -86,7 +86,7 @@ export function parseOBJ(text) {
     }
 
     for (let i=0; i<webglVertexData[0].length;i++){
-            webglVertexData[0][i]/=500;
+            webglVertexData[0][i]/=shrink;
     };
   
     return {

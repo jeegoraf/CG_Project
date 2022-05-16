@@ -248,12 +248,14 @@ function initBuffers(gl) {
   
     // Теперь создаем массив позиций для квадрата.
   
-    const positions = [
-      -50.0,  50.0,
-       50.0,  50.0,
-      -50.0, -50.0,
-       50.0, -50.0,
+    const rawPositions = [
+      -1.0,  1.0,
+      1.0,  1.0,
+      -1.0, -1.0,
+      1.0, -1.0,
     ];
+    const squareSize = 100;
+    let positions = rawPositions.map(pos => pos * squareSize);
   
     // Теперь передаем список позиций в WebGL для построения
     // форма. Мы делаем это, создавая Float32Array из
@@ -402,19 +404,62 @@ const squareProgramInfo = {
 
 
 
-const response = await fetch('https://raw.githubusercontent.com/jeegoraf/CG_Project/sasha/objects/auto.obj');  
+const response = await fetch('./objects/auto.obj');  
 const text = await response.text();
-console.log(text);
-const data = parseOBJ(text);
 
+const data = parseOBJ(text, 500);
 const bufferInfo = webglUtils.createBufferInfoFromArrays(gl, data);
-
 const meshProgramInfo = webglUtils.createProgramInfo(gl, [objVertShader, objFragShader]);
+
+
+const responseLantern = await fetch('./objects/lantern.obj');  
+const textLantern = await responseLantern.text();
+const dataLantern = parseOBJ(textLantern, 300);
+const bufferInfoLantern = webglUtils.createBufferInfoFromArrays(gl, dataLantern);
+const meshProgramInfoLantern = webglUtils.createProgramInfo(gl, [objVertShader, objFragShader]);
+
+function drawLantern(){
+  webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+
+  const fieldOfViewRadians = degToRad(60);
+  const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+  const projection = m4.perspective(fieldOfViewRadians, aspect, zNear, zFar);
+
+  const up = [0, 1, 0];
+  // Compute the camera's matrix using look at.
+  const camera = m4.lookAt(cameraPosition, cameraTarget, up); //!!!!ЧЗХ
+
+  const view = m4.inverse(camera);
+
+  mat4.translate(view, view, [-5,-3,0]);
+  //mat4.rotate(view,view, -1*Math.PI/2, [1,0,0]);
+  //mat4.rotate(view,view,  rotationValue, rotationAxis);
+ 
+  const sharedUniforms = {
+    u_lightDirection: m4.normalize([-1, 3, 5]),
+    u_view: view,
+    u_projection: projection,
+  };
+
+  gl.useProgram(meshProgramInfoLantern.program);
+
+  webglUtils.setUniforms(meshProgramInfoLantern, sharedUniforms);
+
+  webglUtils.setBuffersAndAttributes(gl, meshProgramInfoLantern, bufferInfoLantern);
+
+  webglUtils.setUniforms(meshProgramInfoLantern, {
+    u_world: m4.xRotation(0),
+    u_diffuse: [0.3, 0.7, 0.5, 1],
+  });
+  webglUtils.drawBufferInfo(gl, bufferInfoLantern);
+
+}
+
 
 function renderOBJ(time) {
   drawSquare(gl, squareProgramInfo, initBuffers(gl)) 
-  //drawSquare(gl, squareProgramInfo, initBuffers(gl));
 
+  drawLantern();
   //time *= 0.001;  // convert to seconds
 
   webglUtils.resizeCanvasToDisplaySize(gl.canvas);
@@ -460,11 +505,11 @@ function renderOBJ(time) {
 
    // Make a view matrix from the camera matrix.
    const view = m4.inverse(camera);
-   console.log(view);
+
    mat4.translate(view, view, translateVector);
    mat4.rotate(view,view, -1*Math.PI/2, [1,0,0]);
    mat4.rotate(view,view,  rotationValue, rotationAxis);
-   console.log(view);
+
 
   const sharedUniforms = {
     u_lightDirection: m4.normalize([-1, 3, 5]),
