@@ -378,6 +378,9 @@ const zFar = 1000.0;
 
 
 
+let translateVector = [0,-3,0];
+let rotationAxis = [0, 0, 1];
+let rotationValue = 0;
 async function main() {
 
   start();
@@ -399,8 +402,9 @@ const squareProgramInfo = {
 
 
 
-const response = await fetch('https://webglfundamentals.org/webgl/resources/models/cube/cube.obj');  
+const response = await fetch('https://raw.githubusercontent.com/jeegoraf/CG_Project/sasha/objects/auto.obj');  
 const text = await response.text();
+console.log(text);
 const data = parseOBJ(text);
 
 const bufferInfo = webglUtils.createBufferInfoFromArrays(gl, data);
@@ -408,14 +412,17 @@ const bufferInfo = webglUtils.createBufferInfoFromArrays(gl, data);
 const meshProgramInfo = webglUtils.createProgramInfo(gl, [objVertShader, objFragShader]);
 
 function renderOBJ(time) {
-  time *= 0.001;  // convert to seconds
+  drawSquare(gl, squareProgramInfo, initBuffers(gl)) 
+  //drawSquare(gl, squareProgramInfo, initBuffers(gl));
+
+  //time *= 0.001;  // convert to seconds
 
   webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.enable(gl.DEPTH_TEST);
-  gl.enable(gl.CULL_FACE);
+  //gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  //gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  //gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  //gl.enable(gl.DEPTH_TEST);
+  //gl.enable(gl.CULL_FACE);
 
   const fieldOfViewRadians = degToRad(60);
   const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
@@ -423,13 +430,41 @@ function renderOBJ(time) {
 
   const up = [0, 1, 0];
   // Compute the camera's matrix using look at.
-  const camera = m4.lookAt(cameraPosition, cameraTarget, up);
+  const camera = m4.lookAt(cameraPosition, cameraTarget, up); //!!!!ЧЗХ
 
-  // Make a view matrix from the camera matrix.
-  const view = m4.inverse(camera);
-  console.log(view);
-  mat4.translate(view, view, [0,-3,0]);
-  console.log(view);
+ 
+
+  window.onkeydown=(e)=>{
+    switch(e.code)
+    {
+        case 'Digit1': 
+          translateVector[2]+=0.3;
+          rotationValue = Math.PI/2;
+          break;
+        case 'Digit2': 
+          translateVector[2]-=0.3;
+          rotationValue = -Math.PI/2;
+          break;
+        case 'Digit3': 
+          translateVector[0]-=0.3;
+          rotationValue = 0;
+          break;
+        case 'Digit4': 
+          translateVector[0]+=0.3;
+          rotationValue = Math.PI;
+          break;
+        
+    }
+  };
+  
+
+   // Make a view matrix from the camera matrix.
+   const view = m4.inverse(camera);
+   console.log(view);
+   mat4.translate(view, view, translateVector);
+   mat4.rotate(view,view, -1*Math.PI/2, [1,0,0]);
+   mat4.rotate(view,view,  rotationValue, rotationAxis);
+   console.log(view);
 
   const sharedUniforms = {
     u_lightDirection: m4.normalize([-1, 3, 5]),
@@ -448,12 +483,15 @@ function renderOBJ(time) {
 
   // calls gl.uniform
   webglUtils.setUniforms(meshProgramInfo, {
-    u_world: m4.yRotation(2),
-    u_diffuse: [1, 0.7, 0.5, 1],
+    u_world: m4.xRotation(0),
+    u_diffuse: [0.3, 0.7, 0.5, 1],
   });
   webglUtils.drawBufferInfo(gl, bufferInfo);
 
-  //requestAnimationFrame(renderOBJ);
+   
+
+  requestAnimationFrame(renderOBJ);
+  
 }
 
 function degToRad(deg) {
@@ -461,9 +499,15 @@ function degToRad(deg) {
 }
 
 
+console.log(translateVector);
+
+
+
+//drawSquare(gl, squareProgramInfo, initBuffers(gl))
 
 requestAnimationFrame(renderOBJ);
-drawSquare(gl, squareProgramInfo, initBuffers(gl))
+
+
 }
 
 main();

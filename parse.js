@@ -86,7 +86,7 @@ export function parseOBJ(text) {
     }
 
     for (let i=0; i<webglVertexData[0].length;i++){
-            webglVertexData[0][i]/=3;
+            webglVertexData[0][i]/=500;
     };
   
     return {
